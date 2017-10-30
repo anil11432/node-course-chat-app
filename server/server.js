@@ -12,7 +12,7 @@ app.use(express.static(publicPath));
 
 app.get('/', (req, res) => {
     res.send('hi');
-})
+});
 
 app.listen(port, () => {
     console.log(`server is up on port ${port}`);
