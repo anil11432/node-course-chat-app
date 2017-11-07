@@ -3,6 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
     mongoose.Promise = global.Promise;
 const publicPath = path.join(__dirname, '../public');
 
@@ -14,9 +15,40 @@ var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
 
-mongoose.connect('mongodb://localhost:27017/chat-app');
+mongoose.connect('mongodb://anil:admin@ds151355.mlab.com:51355/multi-language-chat-app');
 
 app.use(express.static(publicPath));
+
+app.use(bodyParser.json());
+
+app.post('/translate', (req, res) => {
+    console.log(req.body);
+
+    console.log(`to be translate from ${req.body.from} to ${req.body.to}`);
+    translate(req.body.text, {from: req.body.from, to: req.body.to}).then(trans => {
+        // console.log(res.text);
+        // //=> Ik spreek Nederlands! 
+        // console.log(res.from.text.autoCorrected);
+        // //=> true 
+        // console.log(res.from.text.value);
+        // //=> I [speak] Dutch! 
+        // console.log(res.from.text.didYouMean);
+        //=> false
+        // io.emit('translatedMessage',{
+        //     original: message.text,
+        //     translated: res.text,
+        //     from: message.from,
+        //     to: message.to,
+        //     id : message.id
+        // });
+        res.send(trans);
+    }).catch(err => {
+        console.error(err);
+    });
+
+});
+
+
 
 io.on('connection',(socket) =>{
     console.log('connected to the client');
@@ -94,28 +126,7 @@ io.on('connection',(socket) =>{
         // });
     });
 
-    socket.on('translate', (message, callback) => {
-        console.log(`to be translate from ${message.from} to ${message.to}`);
-        translate(message.text, {from: message.from, to: message.to}).then(res => {
-            console.log(res.text);
-            //=> Ik spreek Nederlands! 
-            console.log(res.from.text.autoCorrected);
-            //=> true 
-            console.log(res.from.text.value);
-            //=> I [speak] Dutch! 
-            console.log(res.from.text.didYouMean);
-            //=> false
-            io.emit('translatedMessage',{
-                original: message.text,
-                translated: res.text,
-                from: message.from,
-                to: message.to,
-                id : message.id
-            });
-        }).catch(err => {
-            console.error(err);
-        });
-    });
+    
 
     socket.on('disconnect', (socket) =>{
         console.log('disconnected from the client'); 
